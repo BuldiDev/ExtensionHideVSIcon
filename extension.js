@@ -53,14 +53,10 @@ function apply() {
         fs.writeFileSync(cssPath, updated, 'utf8');
         updateChecksum(appRoot, updated);
 
+        // The workbench CSS is cached by the renderer: a window reload isn't always enough
         vscode.window.showInformationMessage(
-            hide ? 'VS Code icon hidden. Reload the window to apply.' : 'VS Code icon restored. Reload the window to apply.',
-            'Reload Window'
-        ).then(choice => {
-            if (choice === 'Reload Window') {
-                vscode.commands.executeCommand('workbench.action.reloadWindow');
-            }
-        });
+            hide ? 'VS Code icon hidden. Close all VS Code windows and reopen to apply.' : 'VS Code icon restored. Close all VS Code windows and reopen to apply.'
+        );
     } catch (error) {
         vscode.window.showErrorMessage(
             `Hide VS Code Icon: cannot modify ${cssPath} (${error.code || error.message}). ` +

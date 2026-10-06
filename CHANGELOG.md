@@ -10,7 +10,6 @@ All notable changes to this project will be documented in this file.
 
 ### 🔧 Changed
 - Enabled by default
-- Reload Window instead of a full restart
 - Visible error message when the CSS file can't be written
 - Simplified: single `extension.js`, removed unused `src/` and `media/`
 

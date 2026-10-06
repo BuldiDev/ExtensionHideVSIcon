@@ -33,13 +33,13 @@ You can also control the icon visibility through VS Code settings:
 1. Open Settings (Ctrl+,)
 2. Search for "Hide VS Code Icon"
 3. Toggle the "Enabled" checkbox
-4. Click **Reload Window** in the notification
+4. Close all VS Code windows and reopen
 
 ## Important Notes
 
 ⚠️ **This extension modifies VS Code system files**
 
-- A window reload is needed after each change (the extension offers it)
+- A full restart of VS Code (all windows) is needed after each change
 - After a VS Code update the patch is re-applied automatically: just reload when prompted
 - Administrator permissions might be required on some systems
 
@@ -54,7 +54,7 @@ You can also control the icon visibility through VS Code settings:
 ## Troubleshooting
 
 ### The icon is not hidden
-- Run `Developer: Reload Window`
+- Close all VS Code windows and reopen
 - Check that `hideVSCodeIcon.enabled` is `true`
 - Check write permissions in VS Code installation folder
 
@@ -63,7 +63,7 @@ You can also control the icon visibility through VS Code settings:
 - Verify that VS Code installation folder is writable
 
 ### Icon reappears after update
-- VS Code updates overwrite the CSS file: the extension patches it again at startup, click **Reload Window**
+- VS Code updates overwrite the CSS file: the extension patches it again at startup, then restart VS Code
 
 ## License
 

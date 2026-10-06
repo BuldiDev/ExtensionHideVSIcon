@@ -12,3 +12,5 @@ vsc-extension-quickstart.md
 **/eslint.config.mjs
 **/.vscode-test.*
 package-lock.json
+
+images/LOGO_SPECS.txt
