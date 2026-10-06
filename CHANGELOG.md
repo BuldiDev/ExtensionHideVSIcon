@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.4] - 2026-10-06
+
+### 🐛 Fixed
+- The icon could stay visible after "Reload Window" because the workbench CSS is cached: the notification now asks to close all VS Code windows and reopen
+
 ## [1.0.3] - 2026-10-06
 
 ### 🐛 Fixed

@@ -2,7 +2,7 @@
   "name": "hide-vscode-icon",
   "displayName": "Hide VS Code Icon",
   "description": "Hide the VS Code icon from the title bar",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "buldidev",
   "icon": "images/logo.png",
   "author": {
