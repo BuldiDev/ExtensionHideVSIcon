@@ -1,8 +1,8 @@
 {
   "name": "hide-vscode-icon",
   "displayName": "Hide VS Code Icon",
-  "description": "Hide the VS Code icon from the title bar by directly modifying the CSS",
-  "version": "1.0.2",
+  "description": "Hide the VS Code icon from the title bar",
+  "version": "1.0.3",
   "publisher": "buldidev",
   "icon": "images/logo.png",
   "author": {
@@ -44,8 +44,8 @@
       "properties": {
         "hideVSCodeIcon.enabled": {
           "type": "boolean",
-          "default": false,
-          "markdownDescription": "Hide the VS Code icon from the top-left corner of the title bar. **Requires complete restart of VS Code to take effect.**",
+          "default": true,
+          "markdownDescription": "Hide the VS Code icon from the top-left corner of the title bar. Applied automatically on startup; reload the window after changing it.",
           "scope": "application",
           "order": 1
         }

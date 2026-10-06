@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-10-06
+
+### 🐛 Fixed
+- Extension did nothing on recent VS Code versions: the install folder is now versioned (`Microsoft VS Code/<hash>/resources`), so the hardcoded path lookup failed silently. The path now comes from `vscode.env.appRoot`
+- "Your Code installation appears to be corrupt" warning: the checksum in `product.json` is updated together with the CSS
+
+### 🔧 Changed
+- Enabled by default
+- Reload Window instead of a full restart
+- Visible error message when the CSS file can't be written
+- Simplified: single `extension.js`, removed unused `src/` and `media/`
+
 ## [1.0.2] - 2025-08-19
 
 ### ✨ Added

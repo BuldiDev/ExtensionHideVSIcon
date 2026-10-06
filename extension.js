@@ -1,227 +1,98 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
-let isExtensionActive = false;
+const START = '/* HideVsIcon Extension - DO NOT EDIT */';
+const END = '/* HideVsIcon Extension - END */';
+const BLOCK_REGEX = /\/\* HideVsIcon Extension - DO NOT EDIT \*\/[\s\S]*?\/\* HideVsIcon Extension - END \*\//g;
+const HIDE_CSS = `${START}
+.monaco-workbench .part.titlebar .window-appicon { display: none !important; }
+${END}`;
+
+// Relative to <appRoot>/out, the same key VS Code uses in product.json "checksums"
+const CSS_KEY = 'vs/workbench/workbench.desktop.main.css';
 
 /**
- * Activates the extension
- * @param {vscode.ExtensionContext} context 
+ * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-    console.log('HideVsIcon extension is now active!');
-    isExtensionActive = true;
-    
-    // Register commands
-    const hideCommand = vscode.commands.registerCommand('hidevsicon.hide', () => {
-        hideVSCodeIcon();
-    });
-    
-    const showCommand = vscode.commands.registerCommand('hidevsicon.show', () => {
-        showVSCodeIcon();
-    });
-
-    // Listener for configuration changes
-    const configListener = vscode.workspace.onDidChangeConfiguration(event => {
-        if (event.affectsConfiguration('hideVSCodeIcon.enabled')) {
-            updateIconVisibility();
-        }
-    });
-    
-    context.subscriptions.push(hideCommand, showCommand, configListener);
-    
-    // Apply initial state
-    setTimeout(() => {
-        if (isExtensionActive) {
-            updateIconVisibility();
-        }
-    }, 1000);
-}
-
-/**
- * Hides the VS Code icon by setting the configuration
- */
-function hideVSCodeIcon() {
-    const config = vscode.workspace.getConfiguration('hideVSCodeIcon');
-    config.update('enabled', true, vscode.ConfigurationTarget.Global).then(() => {
-        vscode.window.showInformationMessage(
-            'VS Code icon hidden! Close VS Code completely and reopen it to see the changes.',
-            'OK'
-        );
-    });
-}
-
-/**
- * Shows the VS Code icon by setting the configuration
- */
-function showVSCodeIcon() {
-    const config = vscode.workspace.getConfiguration('hideVSCodeIcon');
-    config.update('enabled', false, vscode.ConfigurationTarget.Global).then(() => {
-        vscode.window.showInformationMessage(
-            'VS Code icon restored! Close VS Code completely and reopen it to see the changes.',
-            'OK'
-        );
-    });
-}
-
-/**
- * Updates icon visibility based on settings
- */
-function updateIconVisibility() {
-    const config = vscode.workspace.getConfiguration('hideVSCodeIcon');
-    const shouldHide = config.get('enabled', false);
-    
-    try {
-        if (shouldHide) {
-            injectHideCSS();
-        } else {
-            removeHideCSS();
-        }
-    } catch (error) {
-        console.error('Error updating icon visibility:', error);
-    }
-}
-
-/**
- * Injects CSS to hide the icon based on configuration
- */
-function injectHideCSS() {
-    try {
-        const vscodePath = getVSCodeInstallPath();
-        if (!vscodePath) {
-            console.log('VS Code path not found');
-            return false;
-        }
-        
-        const cssPath = path.join(vscodePath, 'resources', 'app', 'out', 'vs', 'workbench', 'workbench.desktop.main.css');
-        
-        if (!fs.existsSync(cssPath)) {
-            console.log(`CSS file not found: ${cssPath}`);
-            return false;
-        }
-        
-        let cssContent = fs.readFileSync(cssPath, 'utf8');
-        
-        // CSS rule to hide the icon
-        const hideIconCSS = `
-/* HideVsIcon Extension - DO NOT EDIT */
-.monaco-workbench .part.titlebar .window-appicon,
-.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .window-appicon,
-.monaco-workbench .part.titlebar .titlebar-left .window-appicon,
-.window-appicon:not(.codicon),
-.titlebar-left .window-appicon,
-.part.titlebar .window-appicon,
-.monaco-workbench .window-appicon,
-.titlebar-container .window-appicon,
-div.window-appicon {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    width: 0px !important;
-    height: 0px !important;
-    margin: 0px !important;
-    padding: 0px !important;
-}
-.monaco-workbench .part.titlebar .titlebar-left {
-    padding-left: 8px !important;
-}
-/* HideVsIcon Extension - END */`;
-
-        // Remove existing CSS
-        const regex = /\/\* HideVsIcon Extension - DO NOT EDIT \*\/[\s\S]*?\/\* HideVsIcon Extension - END \*\//g;
-        cssContent = cssContent.replace(regex, '');
-        
-        // Add new CSS
-        cssContent += hideIconCSS;
-        
-        // Write file
-        fs.writeFileSync(cssPath, cssContent, 'utf8');
-        console.log('CSS to hide icon added');
-        
-        return true;
-        
-    } catch (error) {
-        console.error('Error injecting CSS:', error);
-        return false;
-    }
-}
-
-/**
- * Removes the CSS that hides the icon
- */
-function removeHideCSS() {
-    try {
-        const vscodePath = getVSCodeInstallPath();
-        if (!vscodePath) {
-            return true;
-        }
-
-        const cssPath = path.join(vscodePath, 'resources', 'app', 'out', 'vs', 'workbench', 'workbench.desktop.main.css');
-
-        if (!fs.existsSync(cssPath)) {
-            return true;
-        }
-
-        let cssContent = fs.readFileSync(cssPath, 'utf8');
-
-        // Remove the extension's CSS block
-        const regex = /\/\* HideVsIcon Extension - DO NOT EDIT \*\/[\s\S]*?\/\* HideVsIcon Extension - END \*\//g;
-        const newContent = cssContent.replace(regex, '');
-
-        if (newContent !== cssContent) {
-            fs.writeFileSync(cssPath, newContent, 'utf8');
-            console.log('CSS to hide icon removed');
-        }
-
-        return true;
-
-    } catch (error) {
-        console.error('Error removing CSS:', error);
-        return false;
-    }
-}
-
-/**
- * Finds the VS Code installation path
- */
-function getVSCodeInstallPath() {
-    const possiblePaths = [
-        // Windows - most common paths
-        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'Microsoft VS Code'),
-        'C:\\Program Files\\Microsoft VS Code',
-        'C:\\Program Files (x86)\\Microsoft VS Code',
-        path.join(process.env.USERPROFILE || '', 'AppData', 'Local', 'Programs', 'Microsoft VS Code'),
-        
-        // macOS
-        '/Applications/Visual Studio Code.app/Contents',
-        
-        // Linux
-        '/usr/share/code',
-        '/opt/visual-studio-code',
-        '/snap/code/current'
-    ];
-    
-    for (const possiblePath of possiblePaths) {
-        if (possiblePath && fs.existsSync(possiblePath)) {
-            const resourcesPath = path.join(possiblePath, 'resources');
-            if (fs.existsSync(resourcesPath)) {
-                console.log(`Found VS Code path: ${possiblePath}`);
-                return possiblePath;
+    context.subscriptions.push(
+        vscode.commands.registerCommand('hidevsicon.hide', () => setEnabled(true)),
+        vscode.commands.registerCommand('hidevsicon.show', () => setEnabled(false)),
+        vscode.workspace.onDidChangeConfiguration(event => {
+            if (event.affectsConfiguration('hideVSCodeIcon.enabled')) {
+                apply();
             }
+        })
+    );
+
+    // Re-apply on every startup: VS Code updates overwrite the CSS file
+    apply();
+}
+
+function setEnabled(value) {
+    return vscode.workspace.getConfiguration('hideVSCodeIcon')
+        .update('enabled', value, vscode.ConfigurationTarget.Global);
+}
+
+function apply() {
+    const hide = vscode.workspace.getConfiguration('hideVSCodeIcon').get('enabled', true);
+    const appRoot = vscode.env.appRoot; // .../resources/app, works with versioned install folders
+    const cssPath = path.join(appRoot, 'out', ...CSS_KEY.split('/'));
+
+    try {
+        const original = fs.readFileSync(cssPath, 'utf8');
+        const cleaned = original.replace(BLOCK_REGEX, '').trimEnd();
+        const updated = hide ? `${cleaned}\n${HIDE_CSS}\n` : `${cleaned}\n`;
+
+        if (updated === original) {
+            return;
         }
+
+        fs.writeFileSync(cssPath, updated, 'utf8');
+        updateChecksum(appRoot, updated);
+
+        vscode.window.showInformationMessage(
+            hide ? 'VS Code icon hidden. Reload the window to apply.' : 'VS Code icon restored. Reload the window to apply.',
+            'Reload Window'
+        ).then(choice => {
+            if (choice === 'Reload Window') {
+                vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }
+        });
+    } catch (error) {
+        vscode.window.showErrorMessage(
+            `Hide VS Code Icon: cannot modify ${cssPath} (${error.code || error.message}). ` +
+            'If VS Code is installed system-wide, run it once as administrator.'
+        );
     }
-    
-    console.log('VS Code installation path not found');
-    return null;
 }
 
 /**
- * Deactivates the extension
+ * Keeps product.json in sync so VS Code doesn't report "installation appears to be corrupt".
  */
-function deactivate() {
-    isExtensionActive = false;
-    console.log('HideVsIcon extension deactivated');
+function updateChecksum(appRoot, cssContent) {
+    try {
+        const productPath = path.join(appRoot, 'product.json');
+        const product = fs.readFileSync(productPath, 'utf8');
+        const checksums = JSON.parse(product).checksums;
+        if (!checksums || !checksums[CSS_KEY]) {
+            return;
+        }
+
+        const newChecksum = crypto.createHash('sha256')
+            .update(Buffer.from(cssContent, 'utf8'))
+            .digest('base64')
+            .replace(/=+$/, '');
+
+        fs.writeFileSync(productPath, product.replace(checksums[CSS_KEY], newChecksum), 'utf8');
+    } catch (error) {
+        console.error('Hide VS Code Icon: failed to update checksum', error);
+    }
 }
+
+function deactivate() {}
 
 module.exports = {
     activate,

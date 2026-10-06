@@ -8,10 +8,10 @@ A VS Code extension that hides the VS Code application icon from the top-left co
 
 ## Features
 
-- **Automatically hides** the VS Code icon on startup
-- **Directly modifies** VS Code CSS files for permanent results
-- **Simple commands** to hide, show, or toggle icon visibility
-- **Compatible** with different themes and VS Code versions
+- **Enabled by default**: the icon is hidden as soon as the extension is installed
+- **Survives updates**: the CSS patch is re-applied on every startup
+- **No "corrupt installation" warning**: the checksum in product.json is kept in sync
+- **Simple commands** to hide or show the icon
 
 ## How it works
 
@@ -33,31 +33,29 @@ You can also control the icon visibility through VS Code settings:
 1. Open Settings (Ctrl+,)
 2. Search for "Hide VS Code Icon"
 3. Toggle the "Enabled" checkbox
-4. **Restart VS Code completely** to see the changes
+4. Click **Reload Window** in the notification
 
 ## Important Notes
 
 ⚠️ **This extension modifies VS Code system files**
 
-- You need to restart VS Code completely to see changes
-- Changes might be overwritten during VS Code updates
+- A window reload is needed after each change (the extension offers it)
+- After a VS Code update the patch is re-applied automatically: just reload when prompted
 - Administrator permissions might be required on some systems
 
 ## Project Structure
 
 ```
-├── extension.js          # Main extension logic
-├── package.json          # Extension configuration
-├── media/
-│   └── hide-appicon.css  # CSS rules to hide the icon
+├── extension.js          # All the extension logic
+├── package.json          # Extension manifest
 └── README.md             # This file
 ```
 
 ## Troubleshooting
 
 ### The icon is not hidden
-- Restart VS Code completely
-- Verify that the extension is activated
+- Run `Developer: Reload Window`
+- Check that `hideVSCodeIcon.enabled` is `true`
 - Check write permissions in VS Code installation folder
 
 ### Permission errors
@@ -65,8 +63,7 @@ You can also control the icon visibility through VS Code settings:
 - Verify that VS Code installation folder is writable
 
 ### Icon reappears after update
-- This is normal: VS Code updates overwrite CSS files
-- Reactivate the extension after each update
+- VS Code updates overwrite the CSS file: the extension patches it again at startup, click **Reload Window**
 
 ## License
 
